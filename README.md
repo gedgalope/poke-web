@@ -1,5 +1,9 @@
 # poke-web
 
+```
+A pokemonn database website using the PokeApi API
+```
+
 ## Project setup
 ```
 npm install
