@@ -5,6 +5,7 @@ import Home from '../views/Home.vue'
 Vue.use(VueRouter)
 
 const routes = [
+  
   {
     path: '/',
     name: 'home',
@@ -21,6 +22,9 @@ const routes = [
 ]
 
 const router = new VueRouter({
+  
+  mode: 'history',
+  base: process.env.BASE_URL,
   routes
 })
 
