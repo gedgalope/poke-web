@@ -3,11 +3,12 @@ import pokemon from '../../api/api_pokemon'
 const state = {
   dailyPokemon: null,
   abilityDesc: null,
-  heldItems: null,
+  heldItems: [],
   evolutionSprites: null,
   primarySprite: null,
   secondarySprite: null,
   tertiarySprite: null,
+  damage_relations:null,
 }
 
 const getters = {
@@ -28,6 +29,9 @@ const getters = {
   },
   getTertiarySprites: state => {
     return state.tertiarySprite;
+  },
+  getDamageRelations:state =>{
+    return state.damage_relations
   }
 }
 
@@ -36,10 +40,28 @@ const mutations = {
     state.dailyPokemon = payload;
   },
   UPDATE_ABILITY_DESC(state, payload) {
-    state.abilityDesc = payload
+    // console.log(payload)
+    var abilityArray = []
+    payload.forEach(element => {
+      var abilityBuffer = { name: null, effect: null }
+      abilityBuffer.name = element.name
+      abilityBuffer.effect = element.effect_entries[0].short_effect
+      abilityArray.push(abilityBuffer)
+    });
+    state.abilityDesc = abilityArray
   },
   UPDATE_ITEM(state, payload) {
-    state.heldItems = payload
+    // console.log(payload);
+    var itemArray = []
+    payload.forEach(element => {
+      var itembuffer = { sprite: null, name: null, effect: null }
+      itembuffer.name = element.name,
+        itembuffer.sprite = element.sprites.default
+      itembuffer.effect = element.effect_entries[0].short_effect
+      itemArray.push(itembuffer)
+    });
+    // console.log(itemArray)
+    state.heldItems = itemArray
   },
   UPDATE_SPRITES(state, payload) {
     console.log(payload)
@@ -50,9 +72,12 @@ const mutations = {
       }
       if (payload.length >= 3) {
         state.tertiarySprite = payload[2]
-        
+
       }
     }
+  },
+  UPDATE_DAMAGE_RELATIONS(state, payload){
+    state.damage_relations = payload
   }
 }
 
@@ -69,16 +94,6 @@ const actions = {
     }
   },
   async abilityDescription({ commit }, abilityUrl) {
-    // console.log(abilityUrl)
-    // await abilityUrl.forEach(async element => {
-    //   var buffer;
-    //   buffer = await pokemon.getPokemonAbility(element);
-    //   abilityBuffer.push(buffer)
-    //   // abilityBuffer.push(buffer.map(element=>element.data.effect_entries[0].effect))
-    // }); 
-    // // abilityBuffer = await pokemon.getPokemonAbility() 
-    // // console.log(abilityBuffer);
-
     var abilityBuffer;
     abilityBuffer = await pokemon.getPokemonAbility(abilityUrl)
 
@@ -87,7 +102,7 @@ const actions = {
   async heldItems({ commit }, itemUrl) {
     var itemBuffer;
     itemBuffer = await pokemon.getHeldItems(itemUrl);
-    // console.log(test)
+    // console.log(itemUrl)
     // console.log(await Promise.all(itemBuffer))
     commit("UPDATE_ITEM", await Promise.all(itemBuffer));
   },
@@ -98,6 +113,27 @@ const actions = {
     })
     // console.log(evoSprites);
     commit("UPDATE_SPRITES", evoSprites)
+  },
+  async getTypeInfo({ commit }, typeURL) {
+    const typeInfo = await pokemon.getType(typeURL).then((res) => {
+      return res;
+    })
+    var damRelations = { double:null, half:null, nodam:null }
+    console.log(typeInfo)
+
+
+    if (typeURL.length == 1) {
+      damRelations.double = typeInfo[0].damage_relations.double_damage_from.map(elem => elem.name)
+      damRelations.half = typeInfo[0].damage_relations.half_damage_from.map(elem => elem.name)
+      damRelations.nodam = typeInfo[0].damage_relations.no_damage_from.map(elem => elem.name)
+    } else {
+      typeInfo.forEach(element => {
+        damRelations.double = element.damage_relations.double_damage_from.map(elem => elem.name)
+        damRelations.half = element.damage_relations.half_damage_from.map(elem => elem.name)
+        damRelations.nodam = element.damage_relations.no_damage_from.map(elem => elem.name)
+      })
+    }
+    commit("UPDATE_DAMAGE_RELATIONS",damRelations)
   }
 }
 

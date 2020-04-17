@@ -3,8 +3,8 @@ import api from './api'
 export default {
   async getDailyPokemon() {
     var ranId = Math.ceil(Math.random() * (807 - 1) + 1);
-    // const pokeData = await api().get("pokemon/" + ranId).then((res) => { pichu172 sekmer705 eevee133 odish182
-    const pokeData = await api().get("pokemon/133/").then((res) => {
+    const pokeData = await api().get("pokemon/" + ranId).then((res) => { //pichu172 sekmer705 eevee133 odish182 35clefairy 137porygon
+    // const pokeData = await api().get("pokemon/182/").then((res) => {
 
       return res;
     }).catch((err) => {
@@ -17,7 +17,7 @@ export default {
     const buffer = abilityUrl.map(async ability => {
       const abilityBuffer = await getDataFromURL(ability);
       // console.log(abilityBuffer.data.effect_entries[0].short_effect)
-      return abilityBuffer.effect_entries[0].short_effect;
+      return abilityBuffer
     })
     const abilities = await Promise.all(buffer)
     // console.log(abilities);
@@ -71,19 +71,36 @@ export default {
       if (evolutionChainData.chain.evolves_to.length) {
         var formBuffer = evolutionChainData.chain.evolves_to;
         const secondary = await evolutionKeys(formBuffer);
-        formSprites.push(secondary)
-        if (secondary.finalStage != null) {
-          const tertiary = await evolutionKeys(secondary.finalStage);
-          formSprites.push(tertiary)
+        formSprites.push(secondary);
+        // console.log(secondary) array si secondary so i access nato map or for each??
+        // console.log(secondary[0].finalStage)
+        if (secondary[0].finalStage != null) {
+          const result = secondary.map(async elem => {
+            // console.log(elem)
+            const tertiary = await evolutionKeys(elem.finalStage);
+            return tertiary
+            // console.log(`tertiary ${tertiary}`)
+          });
+          var test = await Promise.all(result)
+          // console.log( test[0]);
+          formSprites.push(test[0])
         }
       }
       // console.log(await Promise.all(formSprites))
 
       return Promise.all(formSprites);
     }
-
-
-
+  },
+  async getType(typeURL) {
+    var typeBuffer = typeURL.map(async element => {
+      const result = await getDataFromURL(element).then((res) => {
+        return res
+      }).catch((err) => {
+        console.log(err);
+      });
+      return result
+    });
+    return Promise.all(typeBuffer)
   }
 }
 async function getDataFromURL(URL) {
@@ -130,15 +147,15 @@ async function getEvolutionDetails(details) {
             else evoKeys.keys.push(key);
           } else if (key.includes('location')) {
             const miscKeys = Object.fromEntries([[key, value]]);
-            var test = {trigger:'location'}
-            evoKeys.keys.push({...test,...miscKeys.location })
+            var test = { trigger: 'location' }
+            evoKeys.keys.push({ ...test, ...miscKeys.location })
             // evoKeys.keys.push(`{${key}:${value}}`)
           }
           else {
             const miscKeys = Object.fromEntries([[key, value]]);
             evoKeys.keys.push([key, value])
             // evoKeys.keys.push(miscKeys)
-            
+
           }
         } else {
           var lvlUpKeyObj;
@@ -146,11 +163,21 @@ async function getEvolutionDetails(details) {
           if (key.includes("item")) {
             // console.log(miscKeys)
             // console.log(miscKeys.item.url)
-            const resBuffer = await getDataFromURL(miscKeys.item.url).then((res) => {
-              return res
-            }).catch((err) => {
-              console.log(err)
-            })
+            var resBuffer;
+            if (key.includes("held")) {
+              resBuffer = await getDataFromURL(miscKeys.held_item.url).then((res) => {
+                return res
+              }).catch((err) => {
+                console.log(err)
+              })
+            } else {
+              resBuffer = await getDataFromURL(miscKeys.item.url).then((res) => {
+                return res
+              }).catch((err) => {
+                console.log(err)
+              })
+            }
+
             const itemSprite = await resBuffer
             // lvlUpKeyObj = { ...element.trigger, ...itemSprite.sprites }
             evoKeys.keys[0] = itemSprite.sprites.default
@@ -182,6 +209,6 @@ async function evolutionKeys(pokemonParams) {
     return { 'forms': forms, 'triggers': triggerInfo, 'finalStage': finalStage };
   });
   const data = await Promise.all(remainingForms)
-  console.log(data)
+  // console.log(data)
   return data;
 }

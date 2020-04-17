@@ -1,5 +1,5 @@
 <template>
-  <v-container class="sprite-handler pt-0">
+  <v-container fluid class="fill-height sprite-handler py-0">
     <v-row v-for="(sprite, index) in sprites" :key="index" justify="center">
       <v-col cols="4">
         <v-row justify="center">
@@ -48,17 +48,40 @@
               >
                 <attack-svg></attack-svg>
               </icon-handler>
+              <v-icon
+                v-if="checkEvolutionKeys(trigger.keys).name=='happiness'"
+                color="pink"
+              >mdi-heart</v-icon>
             </v-row>
             <v-row v-else-if="trigger.name == 'use-item'">
               <!-- {{trigger.keys}} -->
               <template v-for="(key,index) in trigger.keys">
-                <v-img :key="index" :src="key"></v-img>
+                <span :key="index">
+                  <span v-show="false">{{key}}</span>
+                  <v-img v-if="typeof key !='undefined'" :src="key"></v-img>
+                </span>
+              </template>
+            </v-row>
+            <v-row v-else-if="trigger.name == 'trade'">
+              <!-- {{trigger.keys}} -->
+              <template v-for="(key,index) in trigger.keys">
+                <span :key="index">
+                  <span v-show="false">{{key}}</span>
+                  <v-img v-if="typeof key !='undefined'" :src="key"></v-img>
+                  <span v-else>trade</span>
+                </span>
               </template>
             </v-row>
           </span>
         </template>
       </v-col>
-      <v-col class="pa-0" cols="8" v-for="(imgsrc, index) in sprite.forms" :key="index">
+      <v-col
+        align="center"
+        class="pa-0"
+        cols="8"
+        v-for="(imgsrc, index) in sprite.forms"
+        :key="index"
+      >
         <v-img :src="imgsrc"></v-img>
       </v-col>
     </v-row>
